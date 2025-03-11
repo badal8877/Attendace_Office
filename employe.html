@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+    }
+
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      max-width: 1000px;
+      /* Adjusted width for better alignment */
+      margin: auto;
+    }
+
+    /* Arrange input fields in rows with three per row */
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    .input-group {
+      flex: 1;
+      min-width: 280px;
+      /* Ensures proper spacing */
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    /* Make Save button smaller */
+    button {
+      background: #28a745;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 15px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #007bff;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+
+    button.edit {
+      background: #ffc107;
+      color: black;
+    }
+
+    button.delete {
+      background: #dc3545;
+      color: white;
+    }
+
+    button.edit:hover {
+      background: #e0a800;
+    }
+
+    button.delete:hover {
+      background: #c82333;
+    }
+
+    /* Responsive: Adjust layout on smaller screens */
+    @media (max-width: 900px) {
+      .form-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Employee Master</h1>
+  <form id="employeeForm">
+    <input type="hidden" id="empIndex" value="-1">
+
+    <div class="form-row">
+      <div class="input-group">
+        <label>Company:</label>
+        <input type="text" id="company" required>
+      </div>
+      <div class="input-group">
+        <label>Office:</label>
+        <select id="office" required>
+          <option value="">Select Office</option>
+          <option value="BSPTCL HQ">BSPTCL HQ</option>
+          <option value="Other Circle">Other Circle</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Department:</label>
+        <select id="department" required disabled>
+          <option value="">Select Department</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="input-group">
+        <label>Designation:</label>
+        <select id="designation" required>
+          <option value="">Select Designation</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Old Employee ID:</label>
+        <input type="text" id="oldEmpId" required>
+      </div>
+      <div class="input-group">
+        <label>New Employee ID:</label>
+        <input type="text" id="newEmpId" required>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="input-group">
+        <label>Attendance ID:</label>
+        <input type="text" id="attId" required>
+      </div>
+      <div class="input-group">
+        <label>Employee Name:</label>
+        <input type="text" id="empName" required>
+      </div>
+    </div>
+
+    <button type="submit">Save</button>
+  </form>
+
+  <table id="empTable" border="1">
+    <thead>
+      <tr>
+      
+        <th>Company</th>
+        <th>Office</th>
+        <th>Department</th>
+        <th>Designation</th>
+        <th>Old Emp ID</th>
+        <th>New Emp ID</th>
+        <th>Attendance ID</th>
+        <th>Employee Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+ const EMP_STORAGE_KEY = 'employeesData';
+const DEPT_STORAGE_KEY = 'departmentsData';
+const DESIG_STORAGE_KEY = 'designationData';
+const OFFICE_STORAGE_KEY = 'officesData'; // Key for offices data
+
+let employees = JSON.parse(localStorage.getItem(EMP_STORAGE_KEY)) || [];
+let departments = JSON.parse(localStorage.getItem(DEPT_STORAGE_KEY)) || [];
+let designations = JSON.parse(localStorage.getItem(DESIG_STORAGE_KEY)) || [];
+let offices = JSON.parse(localStorage.getItem(OFFICE_STORAGE_KEY)) || []; // Fetch offices data
+
+const employeeForm = document.getElementById('employeeForm');
+const empIndex = document.getElementById('empIndex');
+const companyEl = document.getElementById('company');
+const officeEl = document.getElementById('office');
+const departmentEl = document.getElementById('department');
+const designationEl = document.getElementById('designation');
+const oldEmpIdEl = document.getElementById('oldEmpId');
+const newEmpIdEl = document.getElementById('newEmpId');
+const attIdEl = document.getElementById('attId');
+const empNameEl = document.getElementById('empName');
+const empTableBody = document.getElementById('empTable').querySelector('tbody');
+
+// Function to populate office dropdown with Office Master data
+function populateOfficeDropdown() {
+  officeEl.innerHTML = '<option value="">Select Office</option>';
+  offices.forEach(office => {
+    const option = document.createElement('option');
+    option.value = office.name;
+    option.textContent = office.name;
+    officeEl.appendChild(option);
+  });
+  // Add "BSPTCL HQ" as a static option
+  const bsptclOption = document.createElement('option');
+  bsptclOption.value = "BSPTCL HQ";
+  bsptclOption.textContent = "BSPTCL HQ";
+  officeEl.appendChild(bsptclOption);
+}
+
+// Function to populate department dropdown with departments data
+function populateDepartmentDropdownWithDepartments() {
+  departmentEl.innerHTML = '<option value="">Select Department</option>';
+  departments.forEach(dept => {
+    const option = document.createElement('option');
+    option.value = dept.name;
+    option.textContent = dept.name;
+    departmentEl.appendChild(option);
+  });
+}
+
+// Function to populate designation dropdown
+function populateDesignationDropdown() {
+  designationEl.innerHTML = '<option value="">Select Designation</option>';
+  designations.forEach(desig => {
+    const option = document.createElement('option');
+    option.value = desig;
+    option.textContent = desig;
+    designationEl.appendChild(option);
+  });
+}
+
+// Initialize dropdowns
+populateOfficeDropdown(); // Populate office dropdown with Office Master data
+populateDesignationDropdown(); // Populate designation dropdown
+
+// Event listener for office dropdown
+officeEl.addEventListener('change', function () {
+  if (officeEl.value === "BSPTCL HQ") {
+    departmentEl.disabled = false; // Enable department dropdown
+    populateDepartmentDropdownWithDepartments(); // Populate with departments
+  } else {
+    departmentEl.innerHTML = '<option value="">Select Department</option>'; // Reset department dropdown
+    departmentEl.disabled = true; // Disable department dropdown
+  }
+});
+
+// Function to save employees
+function saveEmployees() {
+  localStorage.setItem(EMP_STORAGE_KEY, JSON.stringify(employees));
+}
+
+// Function to render the employee table
+function renderEmployeeTable() {
+  empTableBody.innerHTML = '';
+  employees.forEach((emp, index) => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${emp.company}</td>
+      <td>${emp.office}</td>
+      <td>${emp.department}</td>
+      <td>${emp.designation}</td>
+      <td>${emp.oldEmpId}</td>
+      <td>${emp.newEmpId}</td>
+      <td>${emp.attId}</td>
+      <td>${emp.empName}</td>
+      <td>
+        <button onclick="loadEmployeeIntoForm(${index})">Edit</button>
+        <button onclick="deleteEmployee(${index})">Delete</button>
+      </td>
+    `;
+    empTableBody.appendChild(row);
+  });
+}
+
+// Function to load employee data into the form
+function loadEmployeeIntoForm(index) {
+  const emp = employees[index];
+  companyEl.value = emp.company;
+  officeEl.value = emp.office;
+  officeEl.dispatchEvent(new Event('change')); // Trigger change event
+  departmentEl.value = emp.department;
+  designationEl.value = emp.designation;
+  oldEmpIdEl.value = emp.oldEmpId;
+  newEmpIdEl.value = emp.newEmpId;
+  attIdEl.value = emp.attId;
+  empNameEl.value = emp.empName;
+  empIndex.value = index;
+}
+
+// Function to delete an employee
+function deleteEmployee(index) {
+  // if (confirm('Are you sure you want to delete this employee?')) {
+    employees.splice(index, 1);
+    saveEmployees();
+    renderEmployeeTable();
+  }
+
+
+// Form submit event listener
+employeeForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+
+  const company = companyEl.value;
+  const office = officeEl.value;
+  const department = departmentEl.disabled ? officeEl.value : departmentEl.value; // Handle disabled department dropdown
+  const designation = designationEl.value;
+  const oldEmpId = oldEmpIdEl.value.trim();
+  const newEmpId = newEmpIdEl.value.trim();
+  const attId = attIdEl.value.trim();
+  const empName = empNameEl.value.trim();
+  const index = parseInt(empIndex.value, 10);
+
+  if (company && office && department && designation && oldEmpId && newEmpId && attId && empName) {
+    const empData = { company, office, department, designation, oldEmpId, newEmpId, attId, empName };
+
+    if (index === -1) {
+      employees.push(empData);
+    } else {
+      employees[index] = empData;
+    }
+
+    saveEmployees();
+    renderEmployeeTable();
+    employeeForm.reset();
+    empIndex.value = -1;
+    departmentEl.disabled = false; // Reset department dropdown state
+  }
+});
+
+// Initial render of the employee table
+renderEmployeeTable();
+  </script>
+</body>
+
+</html>

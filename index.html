@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BSPTCL</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: url('./image/background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden; /* Prevent overflow */
+      position: relative;
+      font-family: Arial, sans-serif; /* Ensure consistent font */
+    }
+    .header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 30px;
+      position: absolute;
+      top: 0;
+    }
+    .logo {
+      height: 120px;
+      width: 120px;
+      object-fit: cover;
+      border-radius: 50%; /* Make logos circular */
+      background-color: transparent; /* Ensure transparency */
+    }
+    h1 {
+      color: black; /* Change text color to black */
+      text-align: center;
+      font-family: Arial, sans-serif; /* Ensure same font formatting */
+      font-weight: bold;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="./image/energy.jpeg" alt="Energy Logo" class="logo">
+    <img src="./image/BSPTCL.jpg" alt="BSPTCL Logo" class="logo">
+  </div>
+  <h1>BSPTCL Aadhaar-Based Attendance</h1>
+  <script>
+    const { ipcRenderer } = require('electron');
+    ipcRenderer.on('menu-selection', (event, selection) => {
+      switch (selection) {
+        case 'designation':
+          console.log('Designation Master selected');
+          break;
+        case 'employ':
+          console.log('Employ Master selected');
+          break;
+        case 'department':
+          console.log('Department Master selected');
+          break;
+        default:
+          break;
+      }
+    });
+  </script>
+</body>
+</html>

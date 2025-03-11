@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance Merger</title>
+  <!-- XLSX library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- html2canvas for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      width: 90%;
+      margin: auto;
+      text-align: center;
+    }
+
+    .upload-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    input,
+    button {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #6f00ff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+
+    th,
+    td {
+      padding: 8px;
+      text-align: center;
+      border: 1px solid #ddd;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #3189e7;
+      color: white;
+      position: sticky;
+      top: 0;
+    }
+
+    .time-cell {
+      white-space: pre-wrap;
+      font-size: 0.9em;
+      line-height: 1.4;
+      min-width: 50px;
+    }
+
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+    }
+
+    .loading.active {
+      display: flex;
+    }
+
+    .upload-container {
+      display: flex;
+      flex-direction: column;
+      /* Stack elements vertically */
+      align-items: flex-start;
+      /* Align items to the start */
+    }
+
+    .input-row {
+      display: flex;
+      /* Use flexbox for horizontal alignment */
+      align-items: flex-start;
+      /* Align items to the start */
+      margin-bottom: 15px;
+      /* Space between rows */
+      flex-wrap: wrap;
+      /* Allow wrapping if the screen is too small */
+
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      /* Stack label and input vertically */
+      /* margin-right: 20px;
+      /* Space between input groups 
+      margin-bottom: 15px; */
+      margin: 20px;
+
+    }
+
+    .input-group label {
+      margin-bottom: 5px;
+      /* Space between label and input */
+      font-weight: bold;
+      /* Make the label text bold */
+      color: #333;
+      /* Set label text color */
+    }
+
+    .input-group input[type="file"],
+    .input-group input[type="text"] {
+      width: 100%;
+      /* Full width for inputs */
+    }
+
+    .button-row {
+      display: flex;
+      /* Use flexbox for button alignment */
+      justify-content: center;
+      /* Center buttons horizontally */
+      margin-top: 10px;
+      /* Space above buttons */
+    }
+
+    .button-row button {
+      margin: 0 5px;
+      /* Adjust button margins */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="loading" id="loading">
+    <div>Processing files...</div>
+  </div>
+
+  <div class="container">
+    <div class="upload-container">
+      <h2>Attendance Merger</h2>
+      <div id="masterStatus" style="color: #666; margin: 10px 0"></div>
+
+      <div class="input-row">
+        <div class="input-group">
+          <label for="file1">Upload First Attendance File:</label>
+          <input type="file" id="file1" accept=".xlsx" title="21st-31st Data (Jan)">
+        </div>
+
+        <div class="input-group">
+          <label for="file2">Upload Second Attendance File:</label>
+          <input type="file" id="file2" accept=".xlsx" title="1st-20th Data (Feb)">
+        </div>
+
+        <div class="input-group">
+          <label for="officeNameInput">Office Name:</label>
+          <input type="text" id="officeNameInput" placeholder="Enter Office Name" />
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button onclick="processFiles()">Process Files</button>
+        <!-- <button onclick="exportToExcel()">Export to Excel</button> -->
+        <button onclick="exportToPDF()">Export to PDF</button>
+      </div>
+    </div>
+
+    <!-- Table Header -->
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Employee Name</th>
+          <th>Old Emp ID</th>
+          <th>New Emp ID</th>
+          <th>Designation</th>
+          <th>Date21--20</th>
+          <th>21</th>
+          <th>22</th>
+          <th>23</th>
+          <th>24</th>
+          <th>25</th>
+          <th>26</th>
+          <th>27</th>
+          <th>28</th>
+          <th>29</th>
+          <th>30</th>
+          <th>31</th>
+          <th>1</th>
+          <th>2</th>
+          <th>3</th>
+          <th>4</th>
+          <th>5</th>
+          <th>6</th>
+          <th>7</th>
+          <th>8</th>
+          <th>9</th>
+          <th>10</th>
+          <th>11</th>
+          <th>12</th>
+          <th>13</th>
+          <th>14</th>
+          <th>15</th>
+          <th>16</th>
+          <th>17</th>
+          <th>18</th>
+          <th>19</th>
+          <th>20</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const EMP_STORAGE_KEY = 'employeesData';
+
+    function showLoading(show) {
+      document.getElementById('loading').classList.toggle('active', show);
+    }
+
+    function getEmployeeMaster() {
+      const storedData = localStorage.getItem(EMP_STORAGE_KEY);
+      return storedData ?
+        new Map(JSON.parse(storedData).map(emp => [emp.attId, emp])) :
+        new Map();
+    }
+
+    async function processFiles() {
+      showLoading(true);
+      const status = document.getElementById('masterStatus');
+
+      try {
+        const employeeMaster = getEmployeeMaster();
+        if (employeeMaster.size === 0) {
+          status.innerHTML = 'No employee data found! Please create employee records first.';
+          status.style.color = 'red';
+          return;
+        }
+
+        const file1 = document.getElementById('file1').files[0];
+        const file2 = document.getElementById('file2').files[0];
+
+        if (!file1 || !file2) {
+          status.innerHTML = 'Please select both attendance files!';
+          status.style.color = 'red';
+          return;
+        }
+
+        const [firstPeriod, secondPeriod] = await Promise.all([
+          processAttendanceFile(file1, true),
+          processAttendanceFile(file2, false)
+        ]);
+
+        const mergedData = mergeAttendanceData(firstPeriod, secondPeriod, employeeMaster);
+        populateTable(mergedData);
+        status.innerHTML = `Processed ${mergedData.length} records`;
+        status.style.color = 'green';
+
+      } catch (error) {
+        status.innerHTML = `Error: ${error.message}`;
+        status.style.color = 'red';
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function processAttendanceFile(file, isFirstPeriod) {
+      const data = await readXLSXFile(file);
+      const attendanceMap = new Map();
+
+      for (let i = 1; i < data.length; i += 3) {
+        const inRow = data[i];
+        const attId = inRow?.[0]?.toString();
+
+        if (!attId) continue;
+
+        attendanceMap.set(attId, {
+          inTimes: extractTimes(inRow, isFirstPeriod),
+          outTimes: extractTimes(data[i + 1], isFirstPeriod),
+          totalTimes: extractTimes(data[i + 2], isFirstPeriod)
+        });
+      }
+
+      return attendanceMap;
+    }
+
+    function extractTimes(row, isFirstPeriod) {
+      // Adjusted slice indices if the first attendance cell is at position 23 for first period 
+      // and at position 3 for second period.
+      const rawTimes = isFirstPeriod
+        ? (row?.slice(23, 34) || Array(11).fill('0'))  // For days 21-31
+        : (row?.slice(3, 22) || Array(20).fill('0'));   // For days 1-20
+
+      return rawTimes.map(t => {
+        try {
+          return convertTo24Hour(t);
+        } catch {
+          return '00:00';
+        }
+      });
+    }
+
+    function mergeAttendanceData(firstPeriod, secondPeriod, employeeMaster) {
+      const mergedData = [];
+      const allAttIds = new Set([...firstPeriod.keys(), ...secondPeriod.keys()]);
+
+      allAttIds.forEach(attId => {
+        const firstData = firstPeriod.get(attId) || createEmptyAttendance();
+        const secondData = secondPeriod.get(attId) || createEmptyAttendance();
+        const masterData = employeeMaster.get(attId) || createEmptyMaster();
+
+        mergedData.push({
+          empName: masterData.empName || 'Unknown',
+          oldEmpId: masterData.oldEmpId || 'N/A',
+          newEmpId: masterData.newEmpId || 'N/A',
+          designation: masterData.designation || 'N/A',
+          inTimes: [...firstData.inTimes, ...secondData.inTimes],
+          outTimes: [...firstData.outTimes, ...secondData.outTimes],
+          totalTimes: [...firstData.totalTimes, ...secondData.totalTimes]
+        });
+      });
+
+      return mergedData;
+    }
+
+    function createEmptyAttendance() {
+      return {
+        inTimes: Array(31).fill('0'),
+        outTimes: Array(31).fill('0'),
+        totalTimes: Array(31).fill('0')
+      };
+    }
+
+    function createEmptyMaster() {
+      return {
+        empName: 'Unknown',
+        oldEmpId: 'N/A',
+        newEmpId: 'N/A',
+        designation: 'N/A',
+      };
+    }
+
+    function convertTo24Hour(timeValue) {
+      if (timeValue === null || timeValue === undefined || timeValue === '') return '00:00';
+
+      if (typeof timeValue === 'number') {
+        const totalSeconds = timeValue * 86400;
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      }
+
+      if (typeof timeValue === 'string') {
+        const ampmMatch = timeValue.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+        if (ampmMatch) {
+          let hours = parseInt(ampmMatch[1]);
+          const minutes = ampmMatch[2];
+          const period = ampmMatch[3].toUpperCase();
+          if (period === 'PM' && hours < 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+          return `${String(hours).padStart(2, '0')}:${minutes}`;
+        }
+        const militaryMatch = timeValue.match(/^\d{2}:\d{2}$/);
+        if (militaryMatch) return timeValue;
+      }
+      return '00:00';
+    }
+
+    function populateTable(data) {
+      const tbody = document.querySelector('#dataTable tbody');
+      tbody.innerHTML = '';
+
+      data.forEach(emp => {
+        // ------------------
+        // Row 1: In-Time row
+        // ------------------
+        const rowIn = document.createElement('tr');
+
+        // Employee info columns (each with rowSpan=3)
+        [emp.empName, emp.oldEmpId, emp.newEmpId, emp.designation].forEach(value => {
+          const td = document.createElement('td');
+          td.textContent = value;
+          td.rowSpan = 3;
+          rowIn.appendChild(td);
+        });
+
+        // New cell for label (In-Time) in the first row
+        const labelIn = document.createElement('td');
+        labelIn.className = 'time-cell';
+        labelIn.textContent = "In-Time";
+        rowIn.appendChild(labelIn);
+
+        // In-Time cells for each of the 31 days
+        for (let i = 0; i < 31; i++) {
+          const td = document.createElement('td');
+          td.className = 'time-cell';
+          td.textContent = convertTo24Hour(emp.inTimes[i]);
+          rowIn.appendChild(td);
+        }
+        tbody.appendChild(rowIn);
+
+        // ------------------
+        // Row 2: Out-Time row
+        // ------------------
+        const rowOut = document.createElement('tr');
+        const labelOut = document.createElement('td');
+        labelOut.className = 'time-cell';
+        labelOut.textContent = "Out-Time";
+        rowOut.appendChild(labelOut);
+        for (let i = 0; i < 31; i++) {
+          const td = document.createElement('td');
+          td.className = 'time-cell';
+          td.textContent = convertTo24Hour(emp.outTimes[i]);
+          rowOut.appendChild(td);
+        }
+        tbody.appendChild(rowOut);
+
+        // ------------------
+        // Row 3: Total-Time row
+        // ------------------
+        const rowTotal = document.createElement('tr');
+        const labelTotal = document.createElement('td');
+        labelTotal.className = 'time-cell';
+        labelTotal.textContent = "Total-Time";
+        rowTotal.appendChild(labelTotal);
+        for (let i = 0; i < 31; i++) {
+          const td = document.createElement('td');
+          td.className = 'time-cell';
+          td.textContent = convertTo24Hour(emp.totalTimes[i]);
+          rowTotal.appendChild(td);
+        }
+        tbody.appendChild(rowTotal);
+      });
+    }
+
+    function readXLSXFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const workbook = XLSX.read(e.target.result, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            resolve(XLSX.utils.sheet_to_json(sheet, { header: 1 }));
+          } catch (error) {
+            reject(new Error('Invalid Excel file format'));
+          }
+        };
+        reader.onerror = () => reject(new Error('Error reading file'));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    // function exportToExcel() {
+    //   const table = document.getElementById('dataTable');
+    //   const wb = XLSX.utils.table_to_book(table);
+    //   XLSX.writeFile(wb, 'merged_attendance.xlsx');
+    // }
+
+    async function exportToPDF() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('l', 'mm', 'legal'); // Legal size in landscape
+      const employees = Array.from(document.querySelectorAll('#dataTable tbody tr')).filter(tr => tr.querySelector('td'));
+      const employeesPerPage = 13;
+      const totalPages = Math.ceil(employees.length / employeesPerPage);
+
+      // Capture the office name from user input
+      const officeName = document.getElementById('officeNameInput').value || 'Office Name';
+
+      showLoading(true);
+
+      try {
+        // Create a temporary container for PDF tables
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        document.body.appendChild(tempContainer);
+
+        for (let page = 0; page < totalPages; page++) {
+          // Create table for current page
+          const table = document.createElement('table');
+          table.style.width = '100%';
+          table.style.borderCollapse = 'collapse';
+          table.style.border = '1px solid black'; // Add border to the table
+          table.innerHTML = document.querySelector('#dataTable thead').innerHTML;
+          const tbody = document.createElement('tbody');
+
+          // Add 13 employees (3 rows each)
+          const start = page * employeesPerPage * 3;
+          const end = start + employeesPerPage * 3;
+          const pageEmployees = Array.from(employees).slice(start, end);
+          tbody.append(...pageEmployees);
+          table.appendChild(tbody);
+          tempContainer.appendChild(table);
+
+          // Ensure all cells have borders
+          const cells = table.querySelectorAll('td, th');
+          cells.forEach(cell => {
+            cell.style.border = '1px solid black'; // Add border to each cell
+          });
+
+          // Convert table to image
+          const canvas = await html2canvas(table, {
+            scale: 1.5,
+            useCORS: true,
+            backgroundColor: "#ffffff"
+          });
+          tempContainer.removeChild(table);
+
+          // Add to PDF
+          if (page > 0) pdf.addPage();
+
+          const imgData = canvas.toDataURL('image/png');
+          const imgWidth = 340; // Adjusted width to fit within legal size (356mm - 16mm for margins)
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          // Adjust the x position to add more space on the left
+          const xPosition = 10; // Increased from 5 to 10 for more left margin
+          const yPosition = 5;
+
+          pdf.addImage(imgData, 'PNG', xPosition, yPosition, imgWidth, imgHeight);
+
+          // Add footer with dynamic office name
+          pdf.setFontSize(10);
+          pdf.text(`Office: ${officeName}`, xPosition + 5, 200); // Adjusted x position for text
+          pdf.text(`Page ${page + 1} of ${totalPages}`, imgWidth - 20, 200); // Adjusted x position for text
+        }
+
+        document.body.removeChild(tempContainer);
+        pdf.save('attendance_report.pdf');
+      } catch (error) {
+        console.error('PDF export error:', error);
+      } finally {
+        showLoading(false);
+      }
+    }
+  </script>
+</body>
+
+</html>
