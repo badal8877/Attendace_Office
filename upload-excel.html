@@ -333,6 +333,28 @@
       });
     }
 
+    // function mergeAttendanceData(firstPeriod, secondPeriod, employeeMaster) {
+    //   const mergedData = [];
+    //   const allAttIds = new Set([...firstPeriod.keys(), ...secondPeriod.keys()]);
+
+    //   allAttIds.forEach(attId => {
+    //     const firstData = firstPeriod.get(attId) || createEmptyAttendance();
+    //     const secondData = secondPeriod.get(attId) || createEmptyAttendance();
+    //     const masterData = employeeMaster.get(attId) || createEmptyMaster();
+
+    //     mergedData.push({
+    //       empName: masterData.empName || 'Unknown',
+    //       oldEmpId: masterData.oldEmpId || 'N/A',
+    //       newEmpId: masterData.newEmpId || 'N/A',
+    //       designation: masterData.designation || 'N/A',
+    //       inTimes: [...firstData.inTimes, ...secondData.inTimes],
+    //       outTimes: [...firstData.outTimes, ...secondData.outTimes],
+    //       totalTimes: [...firstData.totalTimes, ...secondData.totalTimes]
+    //     });
+    //   });
+
+    //   return mergedData;
+    // }
     function mergeAttendanceData(firstPeriod, secondPeriod, employeeMaster) {
       const mergedData = [];
       const allAttIds = new Set([...firstPeriod.keys(), ...secondPeriod.keys()]);
@@ -342,14 +364,43 @@
         const secondData = secondPeriod.get(attId) || createEmptyAttendance();
         const masterData = employeeMaster.get(attId) || createEmptyMaster();
 
+        // Extract from first file (Days 21-31)
+        let firstInTimes = firstData.inTimes.slice(0, 11);
+        let firstOutTimes = firstData.outTimes.slice(0, 11);
+        let firstTotalTimes = firstData.totalTimes.slice(0, 11);
+
+        // Extract from second file (Days 1-20)
+        const secondInTimes = secondData.inTimes.slice(0, 20);
+        const secondOutTimes = secondData.outTimes.slice(0, 20);
+        const secondTotalTimes = secondData.totalTimes.slice(0, 20);
+
+        // **Check if the first file has valid 29-31 data**
+        const hasFullData = firstInTimes.length === 11 && firstInTimes.slice(8, 11).every(time => time && time !== '0' && time !== '00:00');
+
+        if (!hasFullData) {
+          // **If days 29-31 are missing, fill them with '00:00'**
+          for (let i = 8; i < 11; i++) { // Indices 8, 9, 10 correspond to days 29, 30, 31
+            if (!firstInTimes[i] || firstInTimes[i] === '0' || firstInTimes[i] === '00:00') {
+              firstInTimes[i] = '00:00';
+              firstOutTimes[i] = '00:00';
+              firstTotalTimes[i] = '00:00';
+            }
+          }
+        }
+
+        // Ensure that final arrays have exactly 31 days
+        const inTimes = [...firstInTimes, ...secondInTimes].slice(0, 31);
+        const outTimes = [...firstOutTimes, ...secondOutTimes].slice(0, 31);
+        const totalTimes = [...firstTotalTimes, ...secondTotalTimes].slice(0, 31);
+
         mergedData.push({
           empName: masterData.empName || 'Unknown',
           oldEmpId: masterData.oldEmpId || 'N/A',
           newEmpId: masterData.newEmpId || 'N/A',
           designation: masterData.designation || 'N/A',
-          inTimes: [...firstData.inTimes, ...secondData.inTimes],
-          outTimes: [...firstData.outTimes, ...secondData.outTimes],
-          totalTimes: [...firstData.totalTimes, ...secondData.totalTimes]
+          inTimes,
+          outTimes,
+          totalTimes
         });
       });
 
