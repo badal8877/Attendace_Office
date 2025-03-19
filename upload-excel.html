@@ -332,29 +332,6 @@
         }
       });
     }
-
-    // function mergeAttendanceData(firstPeriod, secondPeriod, employeeMaster) {
-    //   const mergedData = [];
-    //   const allAttIds = new Set([...firstPeriod.keys(), ...secondPeriod.keys()]);
-
-    //   allAttIds.forEach(attId => {
-    //     const firstData = firstPeriod.get(attId) || createEmptyAttendance();
-    //     const secondData = secondPeriod.get(attId) || createEmptyAttendance();
-    //     const masterData = employeeMaster.get(attId) || createEmptyMaster();
-
-    //     mergedData.push({
-    //       empName: masterData.empName || 'Unknown',
-    //       oldEmpId: masterData.oldEmpId || 'N/A',
-    //       newEmpId: masterData.newEmpId || 'N/A',
-    //       designation: masterData.designation || 'N/A',
-    //       inTimes: [...firstData.inTimes, ...secondData.inTimes],
-    //       outTimes: [...firstData.outTimes, ...secondData.outTimes],
-    //       totalTimes: [...firstData.totalTimes, ...secondData.totalTimes]
-    //     });
-    //   });
-
-    //   return mergedData;
-    // }
     function mergeAttendanceData(firstPeriod, secondPeriod, employeeMaster) {
       const mergedData = [];
       const allAttIds = new Set([...firstPeriod.keys(), ...secondPeriod.keys()]);
@@ -533,12 +510,6 @@
         reader.readAsArrayBuffer(file);
       });
     }
-
-    // function exportToExcel() {
-    //   const table = document.getElementById('dataTable');
-    //   const wb = XLSX.utils.table_to_book(table);
-    //   XLSX.writeFile(wb, 'merged_attendance.xlsx');
-    // }
 
     async function exportToPDF() {
       const { jsPDF } = window.jspdf;
