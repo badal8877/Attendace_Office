@@ -66,6 +66,12 @@ function createMainWindow() {
       }
     },
     {
+      label: 'Split-Excel', // New menu item for Upload Excel
+      click: () => {
+        mainWindow.loadFile('Split.html'); // Load the upload-excel.html page
+      }
+    },
+    {
       role: 'help',
       submenu: [
         {

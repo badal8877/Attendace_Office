@@ -20,7 +20,7 @@
     "appId": "com.bsptcl.attendance",
     "productName": "bsptcl_attendance",
     "win": {
-      "target": "portable",
+      "target": "nsis",
       "icon": "assets/BSPTCL.ico"
     }
   }

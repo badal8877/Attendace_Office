@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data Processor</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        button { padding: 10px; margin: 10px; cursor: pointer; font-size: 16px; }
+        #fileInput, #status { margin-top: 10px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Excel Data Processor</h2>
+    <input type="file" id="fileInput" accept=".xlsx, .xls">
+    <button id="processFile" disabled>Process Excel</button>
+    <button id="downloadFile" disabled>Download Processed File</button>
+    <p id="status"></p>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        let selectedFile;
+        let processedFileBlob;
+
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            document.getElementById('processFile').disabled = !selectedFile;
+        });
+
+        document.getElementById('processFile').addEventListener('click', async () => {
+            if (!selectedFile) {
+                document.getElementById('status').innerText = 'Please select a file first!';
+                return;
+            }
+
+            document.getElementById('status').innerText = 'Processing...';
+
+            try {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+
+                    let jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                    if (jsonData.length < 3) { 
+                        document.getElementById('status').innerText = 'Error: Not enough data in Excel.';
+                        return;
+                    }
+
+                    // Remove first two rows (header rows)
+                    jsonData.splice(0, 2);
+
+                    // Extract headers from remaining data
+                    let headers = jsonData[0];
+
+                    // Insert new headers and remove old 'Name (ID)' column
+                    headers.splice(0, 1, "Employee Name", "Attendance ID");
+
+                    // Process data from row index 1 (previously row 3)
+                    for (let i = 1; i < jsonData.length; i++) {
+                        let fullText = jsonData[i][0];
+
+                        if (typeof fullText === 'string' && fullText.includes("(") && fullText.includes(")")) {
+                            let empName = fullText.split("(")[0].trim();
+                            let empID = fullText.split("(")[1].split(")")[0].trim();
+                            
+                            // Replace old column with extracted values
+                            jsonData[i].splice(0, 1, empName, empID);
+                        } else {
+                            jsonData[i].splice(0, 1, "", "");
+                        }
+
+                        // Convert time fields (Assuming "In-Time" & "Out-Time" are at index 2 and 3)
+                        if (jsonData[i].length > 2) {
+                            jsonData[i][2] = convertTo24Hour(jsonData[i][2]); // In-Time
+                            jsonData[i][3] = convertTo24Hour(jsonData[i][3]); // Out-Time
+                        }
+                    }
+
+                    // Create new worksheet
+                    const newSheet = XLSX.utils.aoa_to_sheet(jsonData);
+                    const newWorkbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(newWorkbook, newSheet, sheetName);
+
+                    // Convert to Blob for downloading
+                    const excelBuffer = XLSX.write(newWorkbook, { bookType: 'xlsx', type: 'array' });
+                    processedFileBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                    document.getElementById('status').innerText = 'Processing complete! Click Download.';
+                    document.getElementById('downloadFile').disabled = false;
+                };
+                reader.readAsArrayBuffer(selectedFile);
+            } catch (error) {
+                document.getElementById('status').innerText = `Error processing Excel: ${error.message}`;
+            }
+        });
+
+        document.getElementById('downloadFile').addEventListener('click', () => {
+            if (processedFileBlob) {
+                const url = URL.createObjectURL(processedFileBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Processed_Employee_Data.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        function convertTo24Hour(time) {
+    if (!time) return "";
+
+    // Ensure time is a string and trim spaces
+    time = String(time).trim();
+
+    // If time is already in correct 24-hour format (hh:mm)
+    if (/^\d{1,2}:\d{2}$/.test(time)) {
+        let [hours, minutes] = time.split(":").map(Number);
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+
+    // Handle AM/PM format
+    let match = time.match(/(\d+):(\d+)\s*([APap][Mm])?/);
+    if (!match) return time;
+
+    let hours = parseInt(match[1], 10);
+    let minutes = match[2];
+    let period = match[3] ? match[3].toUpperCase() : '';
+
+    if (period === 'PM' && hours !== 12) {
+        hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+}
+
+    </script>
+</body>
+</html>

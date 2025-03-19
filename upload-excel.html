@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Attendance Merger</title>
-  <!-- XLSX library -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <!-- html2canvas for PDF export -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- jsPDF for PDF export -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body {
@@ -193,12 +193,12 @@
 
       <div class="button-row">
         <button onclick="processFiles()">Process Files</button>
-        <!-- <button onclick="exportToExcel()">Export to Excel</button> -->
+      
         <button onclick="exportToPDF()">Export to PDF</button>
       </div>
     </div>
 
-    <!-- Table Header -->
+    
     <table id="dataTable">
       <thead>
         <tr>
@@ -584,7 +584,7 @@
 
           // Convert table to image
           const canvas = await html2canvas(table, {
-            scale: 1.5,
+            scale: 1,
             useCORS: true,
             backgroundColor: "#ffffff"
           });
