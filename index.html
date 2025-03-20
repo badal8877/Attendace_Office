@@ -17,9 +17,9 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      overflow: hidden; /* Prevent overflow */
+      overflow: hidden;
       position: relative;
-      font-family: Arial, sans-serif; /* Ensure consistent font */
+      font-family: Arial, sans-serif;
     }
     .header {
       width: 100%;
@@ -34,15 +34,30 @@
       height: 120px;
       width: 120px;
       object-fit: cover;
-      border-radius: 50%; /* Make logos circular */
-      background-color: transparent; /* Ensure transparency */
+      border-radius: 50%;
+      background-color: transparent;
     }
     h1 {
-      color: black; /* Change text color to black */
+      color: black;
       text-align: center;
-      font-family: Arial, sans-serif; /* Ensure same font formatting */
+      font-family: Arial, sans-serif;
       font-weight: bold;
       font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .info-box {
+      background: rgba(255, 255, 255, 0.8);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      max-width: 500px;
+      margin-top: 10px;
+    }
+    p {
+      color: #333;
+      font-size: 16px;
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -52,6 +67,10 @@
     <img src="./image/BSPTCL.jpg" alt="BSPTCL Logo" class="logo">
   </div>
   <h1>BSPTCL Aadhaar-Based Attendance</h1>
+  <div class="info-box">
+    <p>BSPTCL introduces Aadhar Enabled Biometric Attendance System (AEBAS) as part of its e-Governance vision in collaboration with the Energy Department, Government of Bihar.</p>
+    <p>Supported By IT Department, BSPTCL</p>
+  </div>
   <script>
     const { ipcRenderer } = require('electron');
     ipcRenderer.on('menu-selection', (event, selection) => {
