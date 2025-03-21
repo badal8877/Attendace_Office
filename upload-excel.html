@@ -322,7 +322,7 @@
       // and at position 3 for second period.
       const rawTimes = isFirstPeriod
         ? (row?.slice(23, 34) || Array(11).fill('0'))  // For days 21-31
-        : (row?.slice(3, 22) || Array(20).fill('0'));   // For days 1-20
+        : (row?.slice(3, 23) || Array(20).fill('0'));   // For days 1-20
 
       return rawTimes.map(t => {
         try {
